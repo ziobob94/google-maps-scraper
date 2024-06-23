@@ -1,0 +1,53 @@
+{
+	"server": {
+		"enabled": true,
+		"port": 8000,
+		"host": "localhost",
+		"security": {
+			"ssl": {
+				"enabled": false,
+				"keyPath": "../security/ssl/key.pem",
+				"certPath": "../security/ssl/cert.pem"
+			},
+			"ACL": {
+				"enabled": false,
+				"aclFilePath": "../security/acl/"
+			}
+		},
+		"addons": {
+			"swagger": {
+				"enabled": true,
+				"port": 8001,
+				"host": "localhost"
+			}
+		}
+	},
+	"application": {
+		"maxServerRetry": 30,
+		"maxServerRetryDelay": 1000,
+		"scraper": {
+			"enabled": false
+		},
+		"googleKeys": {
+			"maps": {
+				"baseUrl": "https://maps.googleapis.com/maps/api/place/textsearch/json",
+				"key": "api-key-gen"
+			}
+		}
+	},
+	"mongodb": {
+		"uri": "mongodb+srv://username:password@cluster0.asdcsac.mongodb.net/",
+		"dbName": "database"
+	},
+	"logging": {
+		"fileLogger": true,
+		"webLogger": false,
+		"path": {
+			"application": "./logs/application",
+			"request": "./logs/request"
+		},
+		"dataPattern": "YYYY-MM-DD",
+		"rotation": "14d",
+		"maxSize": "20m"
+	}
+}

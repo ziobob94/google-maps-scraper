@@ -1,0 +1,14 @@
+{
+	"Abruzzo": {
+		"L'Aquila": {
+			"uuid": "AQ",
+			"comuni": ["L'Aquila", "Avezzano", "Sulmona"]
+		}
+	},
+	"Basilicata": {
+		"Potenza": {
+			"uuid": "PZ",
+			"comuni": ["Potenza", "Acerenza", "Albano di Lucania", "Anzi"]
+		}
+	}
+}
