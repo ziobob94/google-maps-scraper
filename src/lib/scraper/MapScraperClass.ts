@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { writeResultOnJsonFile } from './utility';
+import { getExtraction, writeResultOnJsonFile } from './utility';
 import * as comuniItaliani from './places/comuniItaliani.json';
 import { ShopsDocument, insertData } from './dbManagment';
 import mongoose from 'mongoose';
@@ -42,21 +42,29 @@ export class MapScraperClass {
         let trovato = false;
         const resultsPerPage = 20; // Numero di risultati per pagina
         let res: any[] = [];
+        let i = 0;
         
         try {
             while (!trovato) {
+                
                 const params: any = {
-                    query,
-                    location: `${latitude},${longitude}`,
-                    radius,
                     key: this.apiKey,
-                    
                     ...(nextPageToken && { pagetoken: nextPageToken }), // Aggiungi il token di paginazione se presente
                 };
                 
+                if (latitude && longitude) params.location = `${latitude},${longitude}`;
+                if (radius) params.radius = radius;
+                if (query) params.query = query;
+                
+                if(!params.query && !params.location && !params.radius) {
+                    throw new Error("Parametri mancanti");
+                }
                 //if (level === 'comune') params.radius = 15000;
                 
+                console.log(`Ricerca in corso con query: ${params.query}`);
+                
                 const response: any = await axios.get(this.baseUrl, { params });
+                
                 
                 // Elabora la risposta qui
                 const t = response.data.results;
@@ -66,18 +74,21 @@ export class MapScraperClass {
                 // Ottieni il token di paginazione per la prossima pagina di risultati
                 nextPageToken = response.data.next_page_token;
                 
+                console.log(`Ricerca per query: ${params.query}, risultati: ${t.length}, paginazione: ${nextPageToken ? 'presente' : 'nessuna'}`);
+                
                 if (!nextPageToken) trovato = true;
                 
                 await new Promise((resolve) => setTimeout(resolve, 2000));
+                
+                i++;
             };
         } catch (error) {
             console.error(`Si è verificato un errore nella ricerca: `, error);
         }
         
-        let shops: any = filter ? res.filter((el) => el.types.includes('store')) : res
         
         
-        return shops;
+        return res;
     }
     
     
@@ -98,7 +109,7 @@ export class MapScraperClass {
     * @param {boolean} options.writeResult - Flag to write the result to a JSON file (default: false).
     * @return {Promise<Object>} - An object containing the extracted data from Google Maps.
     */
-    async runMaps({ regioni = [], province = ['Pisa'], comuni: [], state = 'Italy', mode = 'standard', level = 'provincia', skipFinding = false, query = '', writeResult = true }: any) {
+    async runMaps({ regioni = [], province = [], comuni: [], state = 'Italy', mode = 'standard', level = 'provincia', skipFinding = false, query = '', writeResult = true }: any) {
         // Se skipFinding è true, esegui direttamente l'inserimento dei dati
         if (skipFinding) return await insertData();
         
@@ -107,9 +118,7 @@ export class MapScraperClass {
         let regione: any = '';
         let provincia: any = '';
         let byMaps: any = {};
-        let comune: string = '';
         let res: any = {};
-        let temp: any = {};
         let uuid = '';
         let skipProvinceFilter = regioni.length === 0;
         let skipComuniFilter = province.length === 0;
@@ -128,87 +137,97 @@ export class MapScraperClass {
             regioni = Object.keys(comuniItaliani); 
         }
         
-        let filteredRegions = regioni.map((el: any) =>  { 
-            const normalizedKey = this.normalizeName(el);
-            const tempMap : any = this.mappaRegioni[normalizedKey];
-            const tempMapEntries = Object.entries(tempMap);
-            return { 
-                [normalizedKey]: tempMapEntries.map(([k,v] : [string, any]) => {
-                    return { [this.normalizeName(k)] : {
-                        ...v,
-                        'comuni': v.comuni?.map((el: any) => this.normalizeName(el)) || [],
-                    } };
-                })
-            } 
+        let filteredRegions : any = {
+            [state]:{}
+        }
+        
+        regioni.forEach((el: any) =>  { 
+            const normalizedRegionKey = this.normalizeName(el);
+            const tempProvinceMap : any = this.mappaRegioni[normalizedRegionKey];
+            const tempProvinceMapEntries = Object.entries(tempProvinceMap);
+            const tempProvince : any = {}
+            tempProvinceMapEntries.forEach(([k,v] : [string, any]) => {
+                tempProvince[this.normalizeName(k)] = {
+                    ...v,
+                    'comuni': v.comuni?.map((el: any) => this.normalizeName(el)) || [],
+                } 
+            })     
+            
+            filteredRegions[state][normalizedRegionKey] = tempProvince;
         });
+        
+        
+        
         
         if(!skipProvinceFilter){
             
-            filteredRegions = filteredRegions.map((_: any, index: number) => {
-                const provinceLocal = filteredRegions[index][Object.keys(filteredRegions[index])[0]];
-                const provinceFilteredKeys = provinceLocal.map((prov: any) => Object.keys(prov)[0])
-                                        .filter((key: any) => {
-                                            return province.map((el : any) => el = this.normalizeName(el)).includes((this.normalizeName(key)));
-                                        })
-
-                
-                provinceLocal.forEach((key: any) => {
-                        const regionName = Object.keys(key)[0];
-                        if(!provinceFilteredKeys.includes(regionName)){
-                            delete key[regionName];
-                        }
+            Object.keys(filteredRegions[state]).forEach((regionKey: any, index: number) => {
+                const provinceLocal = filteredRegions[state][regionKey];
+                const provinceFilteredKeys = Object.keys(provinceLocal).filter((key: any) => {
+                    return province.map((el : any) => el = this.normalizeName(el)).includes((this.normalizeName(key)));
                 })
                 
-                return  { [Object.keys(filteredRegions[index])[0]] : provinceLocal.filter((el: any) => Object.keys(el).length > 0) };
+                
+                Object.keys(provinceLocal).forEach((key: any) => {
+                    if(!provinceFilteredKeys.includes(key)){
+                        delete filteredRegions[state][regionKey][key];
+                    }
+                })
                 
             })
+            
         }
         
+        const regioniKeys = Object.keys(filteredRegions[state]);
+        const rootState = filteredRegions[state];
+        res[state] = {};
+        
         // Ciclo per le regioni
-        for (let i = 0; i < filteredRegions.length; i++) {
-            regione = filteredRegions[i];
-            let nomeRegione : string = Object.keys(regione)[0];
+        for (let i = 0; i < regioniKeys.length; i++) {
+            const nomeRegione : string = regioniKeys[i];
+            province = rootState[nomeRegione];
             
-            province =  regione[nomeRegione];
+            res[state][nomeRegione] = {}
             
-            temp[nomeRegione] = {}
+            const provinceKeys = Object.keys(province);
+            const regionState = rootState[nomeRegione];
             
             // Ciclo per le province
-            for (let j = 0; j < province.length; j++) {
-                provincia = province[j];
-                const nomeProvincia = Object.keys(provincia)[0];
-                uuid = provincia[nomeProvincia].uuid;
+            for (let j = 0; j < provinceKeys.length; j++) {
                 
-                temp[nomeRegione][nomeProvincia] = {}
+                const nomeProvincia : string = provinceKeys[j];
+                provincia = regionState[nomeProvincia];
+                uuid = provincia.uuid;
+                
+                res[state][nomeRegione][nomeProvincia] = {}
                 
                 
                 let tt: any[] = [];
+                let tempQuery = query;
                 
                 // Se il livello di dettaglio è "provincia", memorizza i dati in res
                 if (level === 'provincia') {
                     console.log("Sto ottenendo dati per la regione: " + nomeRegione.toUpperCase() + " e provincia " + nomeProvincia.toUpperCase() + "\n")
                     
-                    query = `${query} provincia ${nomeProvincia}`
+                    tempQuery = `${query} provincia ${nomeProvincia}`
                     
                     // Avvia la ricerca su Google Maps utilizzando startMaps() con la query specificata
-                    byMaps = await this.startMaps({ query, filter: false, mode });
+                    byMaps = await this.startMaps({ query: tempQuery, filter: false, mode });
                     
                     
                     // Effettua trasformazioni e aggiunte ai dati ottenuti da Google Maps
                     byMaps.forEach((el: ShopsDocument) => {
-                        el.provinciaID = provincia;
+                        el.provinciaID = nomeProvincia;
                         el.provinciaUUID = uuid;
                         el.state = state;
-                        el.regione = regione;
+                        el.regione = nomeRegione;
                         tt.push(el);
                     })
                     
                     byMaps = tt;
                     
-                    temp[nomeRegione][nomeProvincia] = byMaps;
-                    
-                    res[state] = temp;
-                    
+                    res[state][nomeRegione][nomeProvincia] = byMaps;
+                                        
                     // Se la modalità è "mongo", trasforma e inserisce i dati in un database MongoDB
                     if (mode === 'mongo') {
                         res = this.transformForMongo({ data: res, level, state, province });
@@ -217,53 +236,57 @@ export class MapScraperClass {
                     
                 }
                 else if (level === 'comune') {
-                    temp[nomeRegione][nomeProvincia] = {
-                        comuni: {}
-                    }
+                    
+                    
+                    const comuniRoot : any = filteredRegions[state][nomeRegione][nomeProvincia].comuni;
                     
                     // Ciclo per i comuni
-                    for (let k = 0; k < filteredRegions[regione][provincia]?.comuni?.length; k++) {
+                    for (let k = 0; k < comuniRoot?.length; k++) {
+
                         tt = [];
-                        comune = filteredRegions[regione][provincia].comuni[k];
-                        const comuneReplaced = comune.replace(/[^a-zA-Z]+/g, '_').toLowerCase();
+                        const nomeComune = comuniRoot[k];
+                        const resRoot = res[state][nomeRegione][nomeProvincia];
+
+                        if(!resRoot.comuni){
+                            resRoot.comuni = {};
+                        }
+                        if(!resRoot.comuni[nomeComune]){
+                            resRoot.comuni[nomeComune] = []
+                        }
                         
-                        temp[nomeRegione][nomeProvincia].comuni[comuneReplaced] = {};
+                        tempQuery =  `${query}, ${nomeComune}, ${uuid}, ${state}`
                         
-                        query += `, ${comune}, ${uuid}, ${state}`
+                        console.log("Sto ottenendo dati per la regione: " + nomeRegione.toUpperCase() + "\t Provincia: " + nomeProvincia.toUpperCase() + "\t Comune: " + nomeComune.toUpperCase() + "\n")
                         
-                        console.log("Sto ottenendo dati per la regione: " + regione.toUpperCase() + "\t Provincia: " + provincia.toUpperCase() + "\t Comune: " + comune.toUpperCase() + "\n")
-                        
-                        const maps = await this.startMaps({ query, filter: false, mode, level });
+                        const maps = await this.startMaps({ query: tempQuery, filter: false, mode, level });
                         
                         if (!maps) continue;
                         
                         byMaps = maps;
                         
                         byMaps.forEach((el: ShopsDocument) => {
-                            el.provinciaID = provincia;
+                            el.provinciaID = nomeProvincia;
                             el.provinciaUUID = uuid;
                             el.state = state;
-                            el.regione = regione;
-                            el.city = comune;
+                            el.regione = nomeRegione;
+                            el.city = nomeComune;
                             tt.push(el);
                         })
                         
                         byMaps = tt;
                         
-                        temp[nomeRegione][nomeProvincia].comuni[comuneReplaced] = byMaps;
-                        
-                        res[state] = temp;
+                        resRoot.comuni[nomeComune] = byMaps;
                         
                         // Se la modalità è "mongo", trasforma e inserisce i dati in un database MongoDB
                         if ( writeResult && mode === 'mongo') {
-                            const transformed = this.transformForMongo({ data: res, level, stateKeyParam: state, regionKeyParam: nomeRegione, provinceKeyParam: nomeProvincia, cityKeyParam: comuneReplaced })
+                            const transformed = this.transformForMongo({ data: res, level, stateKeyParam: state, regionKeyParam: nomeRegione, provinceKeyParam: nomeProvincia, cityKeyParam: nomeComune })
                             await insertData(transformed);
                         }
                     }
                 }
-                console.log(`Provincia ${provincia} scanned successfully\n`);
+                console.log(`Provincia ${nomeProvincia} scanned successfully\n`);
             }
-            console.log(`Regione ${regione} scanned successfully\n`);
+            console.log(`Regione ${nomeRegione} scanned successfully\n`);
         }
         
         
@@ -274,7 +297,8 @@ export class MapScraperClass {
                 mongoose.disconnect();
             }
             else {
-                writeResultOnJsonFile(res, 'byMaps');
+                writeResultOnJsonFile(res, level+'_byMaps');
+                writeResultOnJsonFile(this.cleanExportData(res), level+'_clean_byMaps');
             }
             
         }
@@ -282,6 +306,48 @@ export class MapScraperClass {
         
         // Restituisce l'oggetto contenente i dati estratti
         return res;
+    }
+    
+    
+    cleanExportData(data: any){
+        const dataToReturn : any = {};
+        
+        Object.keys(data).forEach(stateName => {
+            Object.keys(data[stateName]).forEach(regionName => {
+                Object.keys(data[stateName][regionName]).forEach(provinciaName => {
+                    Object.keys(data[stateName][regionName][provinciaName].comuni).forEach(comuneName => {
+                        const tempComune: any = data[stateName][regionName][provinciaName].comuni[comuneName];
+                        
+                        if(!dataToReturn[stateName]) dataToReturn[stateName] = {};
+                        if(!dataToReturn[stateName][regionName]) dataToReturn[stateName][regionName] = {};
+                        if(!dataToReturn[stateName][regionName][provinciaName]) dataToReturn[stateName][regionName][provinciaName] = { comuni: {} };
+                        if(!dataToReturn[stateName][regionName][provinciaName].comuni[comuneName]) dataToReturn[stateName][regionName][provinciaName].comuni[comuneName] = {};
+                        
+              
+                        dataToReturn[stateName][regionName][provinciaName].comuni[comuneName] = tempComune.map((el: any) => { return {
+                            business_status: el.business_status,
+                            name: el.name, 
+                            formatted_address: el.formatted_address,
+                            geometry: el.geometry,
+                            provinciaID: el.provinciaID,
+                            provinciaUUID: el.provinciaUUID,
+                            rating: el.rating,
+                            reference: el.reference,
+                            regione: el.regione,
+                            state: el.state,
+                        }});
+                        
+                    })
+                })
+            })
+        })
+        return dataToReturn
+    }
+    
+    async getExportByMaps(fileName: string, clean = false){
+        const data = await getExtraction(fileName);
+        if(clean) return this.cleanExportData(data);
+        return data;
     }
     
     

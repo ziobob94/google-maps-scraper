@@ -72,6 +72,31 @@ export class ScrapingRouterClass {
             }
         }, async (req: FastifyRequest, reply: FastifyReply) => await this.scrapingControllerInstance?.mapScraperScanHandler(req, reply));
         
+        fastify?.get("/extraction", {
+            schema: {
+                description: 'Get specific scan extraction',
+                tags: ['Scraper'],
+                response: {
+                    200: {
+                        description: 'Successful response',
+                        type: 'object',
+                        properties: {
+                            status: { type: 'string' },
+                            
+                        }
+                    }
+                },
+                querystring: {
+                    type: 'object',
+                    required: ['filename'],
+                    properties: {
+                        filename: { type: 'string', description: 'The name of the file to retrieve' },
+                        clean: { type: 'boolean', description: 'Get clean data' },
+                    }
+                },
+            }
+        }, async (req: FastifyRequest, reply: FastifyReply) => await this.scrapingControllerInstance?.getExtractionHandler(req, reply));
+        
     }
     
     

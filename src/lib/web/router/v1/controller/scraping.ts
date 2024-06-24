@@ -33,10 +33,17 @@ export class ScrapingControllerClass {
         params.regioni = params?.regioni.length > 0 ? params?.regioni[0]?.split(',') : [];
         params.province =  params?.province.length > 0 ? params?.province[0]?.split(',') : [];
         params.comuni = params?.comuni?.length > 0 ? params?.comuni[0]?.split(',') : [];
+        
 
         const result = await this.mapScraperInstance?.runMaps(params);
 
-        res.send(result);
+        res.send(JSON.stringify(result));
+    }
+
+    async getExtractionHandler(req: FastifyRequest, res: FastifyReply) {
+        const queryParams = req.query as any;
+        const result = await this.mapScraperInstance?.getExportByMaps(queryParams?.filename || '', !!queryParams?.clean );
+        res.send(JSON.stringify(result));
     }
 
 }

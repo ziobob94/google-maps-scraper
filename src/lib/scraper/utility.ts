@@ -16,3 +16,9 @@ export async function writeResultOnJsonFile(result: any, name: string = 'data') 
 
     return true;
 }
+
+
+
+export async function getExtraction(filename: string){
+    return JSON.parse(fs.readFileSync('./data/' + filename + '.json', 'utf-8'))
+}
