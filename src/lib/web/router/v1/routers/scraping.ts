@@ -92,6 +92,7 @@ export class ScrapingRouterClass {
                     properties: {
                         filename: { type: 'string', description: 'The name of the file to retrieve' },
                         clean: { type: 'boolean', description: 'Get clean data' },
+                        fields: { type: 'array', description: 'Get specific fields' },
                     }
                 },
             }

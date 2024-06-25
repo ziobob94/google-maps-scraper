@@ -85,7 +85,7 @@ export class LoggerClass {
 
 
 
-    log(data: any, level = 'info',) {
+    log(data: any, level = 'info') {
         this.logger?.log({
             level: level,
             message: data

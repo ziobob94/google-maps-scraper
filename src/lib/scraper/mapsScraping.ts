@@ -1,7 +1,7 @@
 import axios from 'axios';
 import * as dotenv from 'dotenv';
 import { writeResultOnJsonFile } from './utility';
-import * as comuniItaliani from './places/comuniItaliani.json';
+import * as comuniItaliani from './places/regioniItaliane.json';
 import { ShopsDocument, insertData } from './dbManagment';
 import mongoose from 'mongoose';
 dotenv.config();

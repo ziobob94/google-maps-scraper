@@ -42,7 +42,8 @@ export class ScrapingControllerClass {
 
     async getExtractionHandler(req: FastifyRequest, res: FastifyReply) {
         const queryParams = req.query as any;
-        const result = await this.mapScraperInstance?.getExportByMaps(queryParams?.filename || '', !!queryParams?.clean );
+        queryParams.fields = queryParams?.fields?.length > 0 ? queryParams?.fields[0]?.split(',') : [];
+        const result = await this.mapScraperInstance?.getExportByMaps(queryParams?.filename || '', !!queryParams?.clean, queryParams?.fields || []);
         res.send(JSON.stringify(result));
     }
 

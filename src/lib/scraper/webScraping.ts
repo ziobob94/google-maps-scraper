@@ -2,7 +2,7 @@ import { RegionData } from "./index.d";
 import axios from "axios";
 import cheerio from "cheerio";
 import { writeResultOnJsonFile } from './utility';
-import regioniItaliane from './places/regioniItaliane.json';
+import regioniItaliane from './places/regioniItalianeLista.json';
 
 
 
