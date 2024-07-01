@@ -55,6 +55,10 @@ export interface WebClassInterface {
     serverApp: WebClassInterface
 
 
+    /**
+     * Entities instance.
+     */
+    entitiesInstance: any;
 
     /**
      * Initializes the server instance and sets up necessary configurations.

@@ -23,8 +23,9 @@ export class WebClass implements WebClassInterface {
     registeredRoutes: Set<any>;
     routerInstanceV1: RouterClassV1 | undefined;
     mainRouterInstance: MainRouterClass | undefined;
-    serverApp: WebClassInterface
-    
+    serverApp: WebClassInterface;
+    entitiesInstance: any;
+
     /**
     * Constructor for initializing the parent, logger, config, server, and port.
     *
@@ -34,6 +35,7 @@ export class WebClass implements WebClassInterface {
         this.logger?.log("[WebClass] Initializing web class");
         
         this.parent = parent;
+        this.entitiesInstance = this.parent.entitiesInstance;
         this.logger = undefined;
         this.config = undefined;
         this.server = undefined;

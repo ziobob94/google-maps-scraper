@@ -46,7 +46,7 @@
 			"application": "./logs/application",
 			"request": "./logs/request"
 		},
-		"dataPattern": "YYYY-MM-DD",
+		"dataPattern": "yyyy-MMdd",
 		"rotation": "14d",
 		"maxSize": "20m"
 	}

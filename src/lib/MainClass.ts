@@ -3,6 +3,7 @@ import { ScraperClass } from "./scraper";
 import { WebClass } from "./web/WebClass";
 import config, { IConfig } from 'config';
 import { sleep } from "./web/utilities";
+import { MongoWrapperClass } from "../database/mongodb/MongoWrapperClass";
 
 export class MainClass {
     config: IConfig | undefined;
@@ -11,6 +12,7 @@ export class MainClass {
     // Specific Dependencies
     mapScraper: ScraperClass | undefined;
     webInstance: WebClass | undefined;
+    entitiesInstance: any | undefined;
 
 
     /**
@@ -45,12 +47,15 @@ export class MainClass {
     initDependencies() : void {
         if(!this.logger) this.logger = new LoggerClass(config);
         
-        if(this.config?.get("application.scraper.enabled")) this.mapScraper = new ScraperClass(this);
+        if (this.config?.has("application.scraper.enabled") && this.config?.get("application.scraper.enabled")) this.mapScraper = new ScraperClass(this);
         else this.logger?.log("Scraper not enabled");
         
-        if(this.config?.get("server.enabled")) this.webInstance = new WebClass(this);
+        if (this.config?.has("mongodb.enabled") && this.config?.get("mongodb.enabled")) this.entitiesInstance = new MongoWrapperClass(this);
         else this.logger?.log("Server not enabled");
 
+
+        if (this.config?.has("server.enabled") && this.config?.get("server.enabled")) this.webInstance = new WebClass(this);
+        else this.logger?.log("Server not enabled");
     }
 
     /**
