@@ -10,6 +10,17 @@ const apiKey = process.env.GOOGLE_MAPS_API_KEY; // Sostituisci con la tua chiave
 const baseUrl = 'https://maps.googleapis.com/maps/api/place/textsearch/json';
 
 
+/**
+ * Executes a Google Maps Places API search based on the provided query, latitude, longitude, radius, and filter.
+ *
+ * @param {Object} options - The options for the search.
+ * @param {string} [options.query=''] - The search query.
+ * @param {number} options.latitude - The latitude coordinate for the search location.
+ * @param {number} options.longitude - The longitude coordinate for the search location.
+ * @param {number} options.radius - The radius (in meters) around the search location.
+ * @param {boolean} [options.filter=false] - Indicates whether to filter the search results to only include 'store' types.
+ * @return {Promise<any>} - A promise that resolves to the search results.
+ */
 export async function startMaps({ query = '', latitude, longitude, radius, filter }: any): Promise<any> {
 
     const searchResultsByRegion: any = {};

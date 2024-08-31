@@ -135,6 +135,41 @@ export class ScrapingRouterClass {
 			async (req: FastifyRequest, reply: FastifyReply) =>
 				await this.scrapingControllerInstance?.getExtractionHandler(req, reply)
 		)
+
+		fastify?.patch(
+			'/extraction/:id',
+			{
+				schema: {
+					description: "Update specific scan extraction",
+					tags: ["Scraper"],
+					response: {
+						200: {
+							description: "Successful response",
+							type: "object",
+							properties: {
+								status: { type: "boolean" }, // Modificato a booleano
+								result: { type: "object", additionalProperties: true }, // Aggiunta proprietà aggiuntiva
+							},
+							required: ["status", "result"], // Assicurati che tutte le proprietà richieste siano incluse
+						},
+					},
+					body: {
+						type: "object",
+						properties: {
+							data: { type: "object", additionalProperties: true }, // Aggiunta proprietà aggiuntiva
+						},
+					},
+					errorHandler: (errors: any, request: any, reply: any) => {
+						// Handle errors here
+						reply
+							.status(400)
+							.send({ error: "Validation Error", message: errors[0].message })
+					},
+				}
+			},
+			async (req: FastifyRequest, reply: FastifyReply) =>
+				await this.scrapingControllerInstance?.updateSingleDataHandler(req, reply)
+		)
 	}
 
 	setupRouters(fastify: any, options: any) { }

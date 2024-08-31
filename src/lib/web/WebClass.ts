@@ -332,7 +332,7 @@ export class WebClass implements WebClassInterface {
         // CORS
         this.server?.register(fastifyCors.default, {
             origin: '*', // TODO -> change accordingly
-            methods: ['GET', 'POST'] // TODO -> change allowed methods accordingly
+            methods: ['GET', 'POST', 'PATCH'] // TODO -> change allowed methods accordingly
         });
         
         this.logger?.log("[WebClass] CORS initialized");

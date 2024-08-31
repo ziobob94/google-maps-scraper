@@ -85,4 +85,20 @@ export class ScrapingControllerClass {
 
     }
 
+
+    async updateSingleDataHandler(req: FastifyRequest, res: FastifyReply) {
+        const params: any = req.params;
+        const { id } = params;
+        const data: any = req.body;
+
+        try {
+            const updated = await this.entitiesInstance?.estateAgencyModel?.findByIdAndUpdate(id, data, { new: true });
+            res.send({ status: true, result: updated });
+        } catch (error: any) {
+            console.log(error);
+            res.statusCode = 500
+            res.send(error.message);
+        }
+    }
+
 }
