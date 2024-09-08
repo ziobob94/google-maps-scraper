@@ -38,6 +38,6 @@ export class MainControllerClass {
             routes: result
         }
         
-        res.status(200).send(body);
+        return res.status(200).send(body);
     }
 }

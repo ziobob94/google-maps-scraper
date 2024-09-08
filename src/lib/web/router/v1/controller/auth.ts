@@ -19,9 +19,9 @@ export async function getUserInfo(req: FastifyRequest, res: FastifyReply, keyv: 
         token: "example_user"
     }
     if (info)
-        res.send(info);
+        return res.send(info);
     else
-        res.status(401).send({
+        return res.status(401).send({
             status: "Unauthorized",
             translationKey: "INVALID_TOKEN"
         });
@@ -35,7 +35,7 @@ export async function getUserInfo(req: FastifyRequest, res: FastifyReply, keyv: 
  */
 export async function verifyToken(req: FastifyRequest, res: FastifyReply, keyv: any) {
     try {
-        res.send({});
+        return res.send({});
         return;
         // const reaml = ""; //TODO: Prendere Da config
         // const publicKey = keyv;
@@ -44,9 +44,9 @@ export async function verifyToken(req: FastifyRequest, res: FastifyReply, keyv: 
         // jwt.verify(header, publicKey, {
         //     algorithms: ['RS256']
         // });
-        // res.send({});
+        // return res.send({});
     } catch (e) {
-        res.status(401).send({
+        return res.status(401).send({
             status: "Unauthorized",
             translationKey: "INVALID_TOKEN"
         });

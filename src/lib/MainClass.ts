@@ -4,6 +4,7 @@ import { WebClass } from "./web/WebClass";
 import config, { IConfig } from 'config';
 import { sleep } from "./web/utilities";
 import { MongoWrapperClass } from "../database/mongodb/MongoWrapperClass";
+import { MailerClass } from "./utils/mailer";
 
 export class MainClass {
     config: IConfig | undefined;
@@ -13,6 +14,7 @@ export class MainClass {
     mapScraper: ScraperClass | undefined;
     webInstance: WebClass | undefined;
     entitiesInstance: any | undefined;
+    mailerInstance: MailerClass | undefined;
 
 
     /**

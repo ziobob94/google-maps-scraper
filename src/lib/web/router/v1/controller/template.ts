@@ -39,6 +39,6 @@ export class TemplateControllerClass {
             data: result
         }
         
-        res.status(200).send(body);
+        return res.status(200).send(body);
     }
 }

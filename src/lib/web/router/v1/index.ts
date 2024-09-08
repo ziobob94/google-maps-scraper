@@ -54,7 +54,7 @@ export default class RouterClassV1 {
 	initDependencies() { }
 
 	setupHooks(fastify: any, options: any) {
-		fastify.addHook(
+/* 		fastify.addHook(
 			"preValidation",
 			async (
 				request: FastifyRequest,
@@ -65,9 +65,9 @@ export default class RouterClassV1 {
 				done()
 				// Codice da eseguire
 			}
-		)
+		) */
 
-		fastify.addHook(
+/* 		fastify.addHook(
 			"onError",
 			async (request: FastifyRequest, reply: FastifyReply, error: any) => {
 				// Useful for custom error logging
@@ -75,17 +75,17 @@ export default class RouterClassV1 {
 				console.log("onError", error)
 				console.log("onError", request.query)
 			}
-		)
-
+		) */
+/* 
 		fastify.addHook(
 			"onRequestAbort",
 			(request: FastifyRequest, done: HookHandlerDoneFunction) => {
 				// Some code
 				done()
 			}
-		)
+		) */
 
-		fastify.addHook(
+/* 		fastify.addHook(
 			"preHandler",
 			async (
 				request: FastifyRequest,
@@ -95,10 +95,11 @@ export default class RouterClassV1 {
 				done()
 		// Codice da eseguire
 			}
-		)
+		) */
+
 
 		// Logger
-		if (options.log) {
+/* 		if (options.log) {
 			fastify.addHook(
 				"onSend",
 				async (
@@ -112,7 +113,7 @@ export default class RouterClassV1 {
 					return done()
 				}
 			)
-		}
+		} */
 	}
 
 	setupRouters(fastify: any, options: any) {

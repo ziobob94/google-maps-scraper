@@ -265,13 +265,22 @@ export class WebClass implements WebClassInterface {
     
     
     loggerRequestHook(request : FastifyRequest, reply: FastifyReply, done: HookHandlerDoneFunction) {
-        const separator = "".padStart(50, "-") + "\n" + "".padStart(20, "-") + " LOGGER " + "".padStart(22, "-") + "\n" + "".padStart(50, "-");
+        const separator = "".padStart(50, "-") + "\n" + "".padStart(20, "-") + " REQUEST " + "".padStart(22, "-") + "\n" + "".padStart(50, "-");
         this.logger?.log(separator);
         this.logger?.log(`[WebClass] Request received: ${request.method} ${request.url}`);
         this.logger?.log(`[WebClass] Request headers: ${JSON.stringify(request.headers, null, 2)}`);
-        if(request.body) this.logger?.log(`[WebClass] Request body: ${JSON.stringify(request.body)}`);
-        this.logger?.log("[WebClass] \n");
-        done();
+        if (request.body) this.logger?.log(`[WebClass] Request body: \n ${JSON.stringify(request.body, null, 2)}\n`);
+        return done();
+    }
+
+
+    loggerResponseHook(request: FastifyRequest, reply: FastifyReply, payload: any, done: HookHandlerDoneFunction) {
+        const separator = "".padStart(50, "-") + "\n" + "".padStart(20, "-") + " RESPONSE " + "".padStart(22, "-") + "\n" + "".padStart(50, "-");
+        this.logger?.log(separator);
+        this.logger?.log(`[WebClass] Response sent: ${request.method} ${request.url}`);
+        this.logger?.log(`[WebClass] Response headers: ${JSON.stringify(reply.getHeaders(), null, 2)}`);
+        if (payload) this.logger?.log(`[WebClass] Response body: ${payload}`);
+        return done();
     }
     
     debugRequestHook(request : FastifyRequest, reply: FastifyReply, done: HookHandlerDoneFunction) {
@@ -280,8 +289,7 @@ export class WebClass implements WebClassInterface {
         this.logger?.log(`[WebClass] Request received: ${request.method} ${request.url}`);
         this.logger?.log(`[WebClass] Request headers: ${JSON.stringify(request.headers, null, 2)}`);
         if(request.body) this.logger?.log(`[WebClass] RequedebugRequestHookst body: ${JSON.stringify(request.body)}`);
-        this.logger?.log("[WebClass] \n");
-        done();
+        return done();
     }
 
 
@@ -301,9 +309,12 @@ export class WebClass implements WebClassInterface {
         this.logger?.log("[WebClass] Setting up hooks");
         
         //DEBUG HOOK
-        this.addHookToServer("onRequest", this.debugRequestHook.bind(this), "DEBUG");
+        //this.addHookToServer("onRequest", this.debugRequestHook.bind(this), "DEBUG");
         //LOGGER HOOK
-        this.addHookToServer("onRequest", this.loggerRequestHook.bind(this), "LOGGER");
+        this.addHookToServer("preValidation", this.loggerRequestHook.bind(this), "LOGGER");
+
+        //LOGGER HOOK
+        this.addHookToServer("onSend", this.loggerResponseHook.bind(this), "LOGGER_RESPONSE");
 
         this.addHookToServer("onRoute", this.registerRoutesHook.bind(this), "REGITER ROUTES");
         

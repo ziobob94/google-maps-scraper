@@ -58,6 +58,10 @@ export class MongoWrapperClass {
     }
 
 
+    createObjectID(id: string) {
+        if (!id) return new mongoose.Types.ObjectId();
+        else return new mongoose.Types.ObjectId(id);
+    }
 
 
 }

@@ -110,14 +110,14 @@ export class AuthRouterClass {
     
     
     setupHooks(fastify: any, options: any) {
-            // Logger
+/*             // Logger
             if (options.log){
                 fastify.addHook("onSend", (request: FastifyRequest, reply: FastifyReply, payload: any, done: HookHandlerDoneFunction) => {
                     if (request.headers['log-off']) return done(); // log-off is a custom header used to tell the logger to not log a request
                     options.log.log(request, reply, payload);
                     return done();
                 });
-            }
+            } */
     }
     
     

@@ -167,15 +167,80 @@ export class ScrapingRouterClass {
 					},
 				}
 			},
-			async (req: FastifyRequest, reply: FastifyReply) =>
-				await this.scrapingControllerInstance?.updateSingleDataHandler(req, reply)
+			async (req: FastifyRequest, reply: FastifyReply) => await this.scrapingControllerInstance?.updateSingleDataHandler(req, reply)
 		)
+
+		fastify.post('/send-agency-email',
+			{
+				schema: {
+					description: "Update specific scan extraction",
+					tags: ["Scraper"],
+					response: {
+						200: {
+							description: "Successful response",
+							type: "object",
+							properties: {
+								status: { type: "boolean" }, // Modificato a booleano
+								result: { type: "object", additionalProperties: true }, // Aggiunta proprietà aggiuntiva
+							},
+							required: ["status", "result"], // Assicurati che tutte le proprietà richieste siano incluse
+						},
+					},
+					body: {
+						type: "object",
+						properties: {
+							id: { type: "string" },
+							content: { type: "string" },
+							isHtml: { type: "boolean" },
+							emailOptions: {
+								type: "object",
+								properties: {
+									to: { type: "string", description: "Email to send" },
+									subject: { type: "string", description: "Email subject" },
+								},
+								additionalProperties: false,
+								required: [],
+							},
+							emailReplacements: {
+								type: "object",
+							}
+						},
+						additionalProperties: false, // Non permette proprietà non definite, se è importante mantenere la struttura rigida
+						required: [], // Non richiede nessuna proprietà, consentendo un body vuoto
+					},
+					errorHandler: (errors: any, request: any, reply: any) => {
+						// Handle errors here
+						reply
+							.status(400)
+							.send({ error: "Validation Error", message: errors[0].message })
+					},
+				}
+			}, async (req: FastifyRequest, reply: FastifyReply) => await this.scrapingControllerInstance?.sendEmailHandler(req, reply)
+		)
+
+		fastify.get('/email-template', {
+			schema: {
+				description: "Update specific scan extraction",
+				tags: ["Scraper"],
+				response: {
+					200: {
+						description: "Successful response",
+						type: "object",
+						properties: {
+							status: { type: "boolean" }, // Modificato a booleano
+							result: { type: "string" }, // Aggiunta proprietà aggiuntiva
+						},
+						required: ["status", "result"], // Assicurati che tutte le proprietà richieste siano incluse
+					},
+				}
+			}
+		}, async (req: FastifyRequest, reply: FastifyReply) => await this.scrapingControllerInstance?.getEmailTemplateHandelr(req, reply))
 	}
 
 	setupRouters(fastify: any, options: any) { }
 
 	setupHooks(fastify: any, options: any) {
-	// Logger
+/* 	// Logger
 		if (options.log) {
 			fastify.addHook(
 				"onSend",
@@ -190,7 +255,7 @@ export class ScrapingRouterClass {
 					return done()
 				}
 			)
-		}
+		} */
 	}
 
 	registerRouter() {

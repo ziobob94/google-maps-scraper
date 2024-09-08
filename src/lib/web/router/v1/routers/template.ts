@@ -36,7 +36,7 @@ export class TemplateRouterClass {
             _this.setupRouters(fastify, options);
             
             // Done registration
-            done();
+            return done();
         };
     }
     
